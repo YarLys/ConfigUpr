@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -11,25 +12,37 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 
 public class Main{
-    /*public static void unZip(String path) throws IOException {
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(path));
-        zis.getNextEntry();
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            if (zipEntry.isDirectory()) {
-                System.out.println(zipEntry.getName());
+    public static String start_path = "test_arh/";
+    public static String script_name = "";
+    public static String current_path = "test_arh/";
+    public static int path_count(String path) {
+        int out = 0;
+        for (int i = 0; i < path.length(); i++) {
+            if (path.charAt(i) == '/')
+                out++;
+        }
+        return out;
+    }
+
+    public static boolean checkDir(String path, Boolean isDir) { // функция для проверки, находится ли директория/файл в текущей папке
+        if (path.startsWith(current_path)) {
+            if (isDir) {
+                if (path_count(current_path) == path_count(path) - 1) {
+                    return true;
+                }
+                else return false;
             }
             else {
-                System.out.println(zipEntry.getName());
+                if (path_count(current_path) == path_count(path)) {
+                    return true;
+                }
+                else return false;
             }
-
-            zipEntry = zis.getNextEntry();
         }
-
-        zis.closeEntry();
-        zis.close();
-    }*/
-    public static void unTar(String path) {
+        else return false;
+    }
+    public static ArrayList<String> unTar(String path) { // распаковка .tar архива
+        ArrayList<String> out = new ArrayList<>();
         try {
             File inputTarFile = new File(path);
 
@@ -44,30 +57,34 @@ public class Main{
                 TarArchiveEntry entry;
 
                 while ((entry = tarArchiveInputStream.getNextTarEntry()) != null) {
-                    System.out.println(entry.getName());
-                    //printDirectories(tarArchiveInputStream, entry.getName());
+                    Boolean b = entry.isDirectory();
+                    if (checkDir(entry.getName(), b)) {
+                        out.add(entry.getName());
+                    }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return out;
     }
 
-    public static void printDirectories(TarArchiveInputStream tarInputStream, String directoryName)
-        throws IOException
-    {
-        TarArchiveEntry entry;
-        while ((entry = (TarArchiveEntry) tarInputStream.getNextEntry()) != null) {
-            if (entry.getName().startsWith(directoryName + "/")) {
-                if (entry.isDirectory()) {
-                    System.out.println("  Каталог: " + entry.getName().substring(directoryName.length() + 1));
-                    printDirectories(tarInputStream, entry.getName());
-                } else {
-                    System.out.println("  Файл: " + entry.getName().substring(directoryName.length() + 1));
-                }
-            } else {
+    public static void checkCommand(String text, DefaultListModel<String> listModel) {
+        switch (text) {
+            case "> ls":
+                ArrayList<String> arrayList = unTar("src/test_arh.tar");
+                for (int i = 0; i < arrayList.size(); i++)
+                    listModel.add(listModel.getSize(), arrayList.get(i));
                 break;
-            }
+            case "> cd":
+
+                break;
+            case "> tail":
+
+                break;
+            case "> pwd":
+
+                break;
         }
     }
     public static void runCmd() {
@@ -99,6 +116,7 @@ public class Main{
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         listModel.add(listModel.getSize(), textField.getText());
+                        checkCommand(textField.getText(), listModel);
                         commands.ensureIndexIsVisible(listModel.getSize() - 1);
                         textField.setText("> ");
                     }
@@ -108,6 +126,7 @@ public class Main{
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         listModel.add(listModel.getSize(), textField.getText());
+                        checkCommand(textField.getText(), listModel);
                         commands.ensureIndexIsVisible(listModel.getSize() - 1);
                         textField.setText("> ");
                     }
@@ -146,12 +165,8 @@ public class Main{
     }
 
     public static void main(String args[]) {
-        // runCmd();
-        /*try {
-            unZip("src/test.zip");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }*/
-        unTar("src/test_arh.tar");
+        //start_path = args[0];
+        //script_name = args[1];
+        runCmd();
     }
 }
