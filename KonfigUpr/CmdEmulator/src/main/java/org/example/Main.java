@@ -89,8 +89,30 @@ public class Main{
                 for (int i = 0; i < arrayList.size(); i++)
                     listModel.add(listModel.getSize(), arrayList.get(i));
                 break;
+
             case "> cd":
-                String sub_path = text.substring(text.indexOf("cd") + 3);
+                unTar("src/test_arh.tar"); // чтобы в directories были актуальные папки
+                if (text.length() == 6 && text.charAt(text.length()-1) == '/') { // cd /
+                    current_path = start_path;
+                    break;
+                }
+
+                if (text.endsWith("..")) { // cd ..
+                    int count = 0;
+                    int j = 0;
+                    for (j = current_path.length()-1; j >= 0; j--) {
+                        if (current_path.charAt(j) == '/') {
+                            count++;
+                            if (count == 2) break;
+                        }
+                    }
+                    if (count == 2) {
+                        current_path = current_path.substring(0, j + 1);
+                        break;
+                    } // else ?
+                }
+
+                String sub_path = text.substring(text.indexOf("cd") + 3); // cd dir_1
                 if (directories.contains(sub_path + "/")) {
                     current_path = current_path + sub_path + "/";
                     //System.out.println(current_path);
