@@ -15,6 +15,7 @@ public class Main{
     public static String start_path = "test_arh/";
     public static String script_name = "";
     public static String current_path = "test_arh/";
+    public static ArrayList<String> directories = new ArrayList<>();
     public static int path_count(String path) {
         int out = 0;
         for (int i = 0; i < path.length(); i++) {
@@ -60,6 +61,8 @@ public class Main{
                     Boolean b = entry.isDirectory();
                     if (checkDir(entry.getName(), b)) {
                         out.add(entry.getName());
+                        if (b && entry.getName().startsWith(current_path) && entry.getName().length() > current_path.length())
+                            directories.add(entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()));
                     }
                 }
             }
@@ -70,14 +73,29 @@ public class Main{
     }
 
     public static void checkCommand(String text, DefaultListModel<String> listModel) {
-        switch (text) {
+        // надо как-то получить начало text
+        String text_start = "";
+        int k = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == ' ') {
+                k++;
+                if (k == 2) break;
+            }
+            text_start = text_start + text.charAt(i);
+        }
+        switch (text_start) {
             case "> ls":
                 ArrayList<String> arrayList = unTar("src/test_arh.tar");
                 for (int i = 0; i < arrayList.size(); i++)
                     listModel.add(listModel.getSize(), arrayList.get(i));
                 break;
             case "> cd":
-
+                String sub_path = text.substring(text.indexOf("cd") + 3);
+                if (directories.contains(sub_path + "/")) {
+                    current_path = current_path + sub_path + "/";
+                    //System.out.println(current_path);
+                }
+                else listModel.add(listModel.getSize(), "No such file or directory.");
                 break;
             case "> tail":
 
@@ -167,6 +185,7 @@ public class Main{
     public static void main(String args[]) {
         //start_path = args[0];
         //script_name = args[1];
+        unTar("src/test_arh.tar");
         runCmd();
     }
 }
