@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
@@ -123,7 +124,7 @@ public class Main{
 
                 break;
             case "> pwd":
-
+                listModel.add(listModel.getSize(), current_path);
                 break;
         }
     }
@@ -157,6 +158,9 @@ public class Main{
                     public void actionPerformed(ActionEvent e) {
                         listModel.add(listModel.getSize(), textField.getText());
                         checkCommand(textField.getText(), listModel);
+                        if (textField.getText().equals("> exit")) {
+                            window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
+                        }
                         commands.ensureIndexIsVisible(listModel.getSize() - 1);
                         textField.setText("> ");
                     }
@@ -167,6 +171,9 @@ public class Main{
                     public void actionPerformed(ActionEvent e) {
                         listModel.add(listModel.getSize(), textField.getText());
                         checkCommand(textField.getText(), listModel);
+                        if (textField.getText().equals("> exit")) {
+                            window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
+                        }
                         commands.ensureIndexIsVisible(listModel.getSize() - 1);
                         textField.setText("> ");
                     }
