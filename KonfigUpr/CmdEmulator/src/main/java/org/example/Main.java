@@ -17,6 +17,7 @@ public class Main{
     public static String script_name = "";
     public static String current_path = "test_arh/";
     public static ArrayList<String> directories = new ArrayList<>();
+    public static ArrayList<String> files = new ArrayList<>();
     public static int path_count(String path) {
         int out = 0;
         for (int i = 0; i < path.length(); i++) {
@@ -62,8 +63,13 @@ public class Main{
                     Boolean b = entry.isDirectory();
                     if (checkDir(entry.getName(), b)) {
                         out.add(entry.getName());
-                        if (b && entry.getName().startsWith(current_path) && entry.getName().length() > current_path.length())
+                        if (b && entry.getName().length() > current_path.length())
                             directories.add(entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()));
+                        else {
+                            if (!b) {
+                                files.add(entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()));
+                            }
+                        }
                     }
                 }
             }
@@ -71,6 +77,67 @@ public class Main{
             e.printStackTrace();
         }
         return out;
+    }
+
+    public static ArrayList<String> read_file(String name) {
+        try {
+            File inputTarFile = new File("src/test_arh.tar");
+            try (InputStream fileInputStream = new FileInputStream(inputTarFile);
+                 InputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+                 TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(bufferedInputStream))
+            {
+                TarArchiveEntry entry;
+                while ((entry = tarArchiveInputStream.getNextTarEntry()) != null) {
+                    if (entry.isFile() && entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()).equals(name)) {
+                        
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ArrayList<String> out = new ArrayList<>();
+        /*try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(name));
+            String line = bufferedReader.readLine();
+            ArrayList<String> out2 = new ArrayList<>();
+            while (line != null) {
+                out2.add(line);
+                line = bufferedReader.readLine();
+            }
+            // получим последние 10 строк
+            if (out2.size() <= 10) {
+                out = out2;
+            }
+            else {
+                int i = out2.size() - 11;
+                int k = 0;
+                while (k < 10) {
+                    out.add(out2.get(i));
+                    i++;
+                    k++;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }*/
+        return out;
+    }
+
+    public static void tail_command(String text, DefaultListModel<String> listModel) {
+        if (text.length() <= 7) // > tail
+            return;
+        String sub_path = text.substring(text.indexOf("tail") + 5);
+        if (files.contains(sub_path)) {
+            ArrayList<String> file_strings = new ArrayList<>();
+            file_strings = read_file(sub_path);
+
+            // добавляем на экран строки из файла
+            for (int i = 0; i < file_strings.size(); i++) {
+                listModel.add(listModel.getSize(), file_strings.get(i));
+            }
+        }
     }
 
     public static void checkCommand(String text, DefaultListModel<String> listModel) {
@@ -92,6 +159,9 @@ public class Main{
                 break;
 
             case "> cd":
+                if (text.length() <= 5) // > cd
+                    break;
+
                 unTar("src/test_arh.tar"); // чтобы в directories были актуальные папки
                 if (text.length() == 6 && text.charAt(text.length()-1) == '/') { // cd /
                     current_path = start_path;
@@ -121,7 +191,7 @@ public class Main{
                 else listModel.add(listModel.getSize(), "No such file or directory.");
                 break;
             case "> tail":
-
+                tail_command(text, listModel);
                 break;
             case "> pwd":
                 listModel.add(listModel.getSize(), current_path);
