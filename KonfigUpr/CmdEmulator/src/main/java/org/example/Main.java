@@ -11,6 +11,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.utils.IOUtils;
 
 public class Main{
     public static String start_path = "test_arh/";
@@ -80,6 +81,7 @@ public class Main{
     }
 
     public static ArrayList<String> read_file(String name) {
+        ArrayList<String> out = new ArrayList<>();
         try {
             File inputTarFile = new File("src/test_arh.tar");
             try (InputStream fileInputStream = new FileInputStream(inputTarFile);
@@ -88,40 +90,26 @@ public class Main{
             {
                 TarArchiveEntry entry;
                 while ((entry = tarArchiveInputStream.getNextTarEntry()) != null) {
-                    if (entry.isFile() && entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()).equals(name)) {
-                        
+                    if (entry.isFile() && entry.getName().contains(current_path) && entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()).equals(name)) {
+                        BufferedReader br = new BufferedReader(new InputStreamReader(tarArchiveInputStream));
+                        String line;
+                        int linesCount = 0;
+                        String[] lastLines = new String[10];
+                        while ((line = br.readLine()) != null) {
+                            lastLines[linesCount % 10] = line;
+                            linesCount++;
+                        }
+                        int start = linesCount > 10 ? linesCount % 10 : 0;
+                        for (int i = 0; i < 10; i++) {
+                            if (lastLines[(start + i) % 10] != null)
+                                out.add(lastLines[(start + i) % 10]);
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        ArrayList<String> out = new ArrayList<>();
-        /*try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(name));
-            String line = bufferedReader.readLine();
-            ArrayList<String> out2 = new ArrayList<>();
-            while (line != null) {
-                out2.add(line);
-                line = bufferedReader.readLine();
-            }
-            // получим последние 10 строк
-            if (out2.size() <= 10) {
-                out = out2;
-            }
-            else {
-                int i = out2.size() - 11;
-                int k = 0;
-                while (k < 10) {
-                    out.add(out2.get(i));
-                    i++;
-                    k++;
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }*/
         return out;
     }
 
@@ -138,6 +126,7 @@ public class Main{
                 listModel.add(listModel.getSize(), file_strings.get(i));
             }
         }
+        else listModel.add(listModel.getSize(), "No such file.");
     }
 
     public static void checkCommand(String text, DefaultListModel<String> listModel) {
@@ -188,7 +177,7 @@ public class Main{
                     current_path = current_path + sub_path + "/";
                     //System.out.println(current_path);
                 }
-                else listModel.add(listModel.getSize(), "No such file or directory.");
+                else listModel.add(listModel.getSize(), "No such directory.");
                 break;
             case "> tail":
                 tail_command(text, listModel);
@@ -196,6 +185,8 @@ public class Main{
             case "> pwd":
                 listModel.add(listModel.getSize(), current_path);
                 break;
+            default:
+                listModel.add(listModel.getSize(), "No such command.");
         }
     }
     public static void runCmd() {
