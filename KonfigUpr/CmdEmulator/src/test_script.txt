@@ -1,0 +1,15 @@
+ls
+pwd
+cd dir_1
+cd dir_3
+tail text_dir3.txt
+cd ..
+ls
+pwd
+cd dir_2
+pwd
+ls
+tail text_2.txt
+cd /
+ls
+pwd

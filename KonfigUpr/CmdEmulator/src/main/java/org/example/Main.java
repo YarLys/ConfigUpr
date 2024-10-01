@@ -5,7 +5,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -16,7 +18,7 @@ import org.apache.commons.compress.utils.IOUtils;
 public class Main{
     public static String start_path = "test_arh/";
     public static String script_name = "";
-    public static String current_path = "test_arh/";
+    public static String current_path = start_path;
     public static ArrayList<String> directories = new ArrayList<>();
     public static ArrayList<String> files = new ArrayList<>();
     public static int path_count(String path) {
@@ -46,6 +48,8 @@ public class Main{
         else return false;
     }
     public static ArrayList<String> unTar(String path) { // распаковка .tar архива
+        directories.clear();
+        files.clear();
         ArrayList<String> out = new ArrayList<>();
         try {
             File inputTarFile = new File(path);
@@ -64,12 +68,9 @@ public class Main{
                     Boolean b = entry.isDirectory();
                     if (checkDir(entry.getName(), b)) {
                         out.add(entry.getName());
-                        if (b && entry.getName().length() > current_path.length())
-                            directories.add(entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()));
-                        else {
-                            if (!b) {
-                                files.add(entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()));
-                            }
+                        if (entry.getName().contains(current_path)) {
+                            if (b) directories.add(entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()));
+                            else files.add(entry.getName().substring(entry.getName().indexOf(current_path) + current_path.length()));
                         }
                     }
                 }
@@ -80,7 +81,21 @@ public class Main{
         return out;
     }
 
-    public static ArrayList<String> read_file(String name) {
+    public static ArrayList<String> read_script(String name) {
+        ArrayList<String> out = new ArrayList<>();
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(name));
+            String line = "";
+            while ( (line = bufferedReader.readLine()) != null) {
+                out.add("> " + line);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return out;
+    }
+
+    public static ArrayList<String> read_file(String name, int k) {
         ArrayList<String> out = new ArrayList<>();
         try {
             File inputTarFile = new File("src/test_arh.tar");
@@ -94,15 +109,15 @@ public class Main{
                         BufferedReader br = new BufferedReader(new InputStreamReader(tarArchiveInputStream));
                         String line;
                         int linesCount = 0;
-                        String[] lastLines = new String[10];
+                        String[] lastLines = new String[k];
                         while ((line = br.readLine()) != null) {
-                            lastLines[linesCount % 10] = line;
+                            lastLines[linesCount % k] = line;
                             linesCount++;
                         }
-                        int start = linesCount > 10 ? linesCount % 10 : 0;
-                        for (int i = 0; i < 10; i++) {
-                            if (lastLines[(start + i) % 10] != null)
-                                out.add(lastLines[(start + i) % 10]);
+                        int start = linesCount > k ? linesCount % k : 0;
+                        for (int i = 0; i < k; i++) {
+                            if (lastLines[(start + i) % k] != null)
+                                out.add(lastLines[(start + i) % k]);
                         }
                     }
                 }
@@ -110,6 +125,7 @@ public class Main{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        if (out.isEmpty()) out.add("No such file.");
         return out;
     }
 
@@ -119,7 +135,7 @@ public class Main{
         String sub_path = text.substring(text.indexOf("tail") + 5);
         if (files.contains(sub_path)) {
             ArrayList<String> file_strings = new ArrayList<>();
-            file_strings = read_file(sub_path);
+            file_strings = read_file(sub_path, 10);
 
             // добавляем на экран строки из файла
             for (int i = 0; i < file_strings.size(); i++) {
@@ -180,6 +196,7 @@ public class Main{
                 else listModel.add(listModel.getSize(), "No such directory.");
                 break;
             case "> tail":
+                unTar("src/test_arh.tar"); // чтобы в files были актуальные файлы
                 tail_command(text, listModel);
                 break;
             case "> pwd":
@@ -189,7 +206,42 @@ public class Main{
                 listModel.add(listModel.getSize(), "No such command.");
         }
     }
-    public static void runCmd() {
+
+    public static void buttonsListeners(JTextField textField, DefaultListModel<String> listModel, JFrame window,
+                                        JList<String> commands, JButton button) {
+        textField.addActionListener(new ActionListener() { // обработка нажатия enter
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listModel.add(listModel.getSize(), textField.getText());
+                checkCommand(textField.getText(), listModel);
+                if (textField.getText().equals("> exit")) {
+                    window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
+                }
+                commands.ensureIndexIsVisible(listModel.getSize() - 1);
+                textField.setText("> ");
+            }
+        });
+
+        button.addActionListener(new ActionListener() { // обработка нажатия кнопки
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listModel.add(listModel.getSize(), textField.getText());
+                checkCommand(textField.getText(), listModel);
+                if (textField.getText().equals("> exit")) {
+                    window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
+                }
+                commands.ensureIndexIsVisible(listModel.getSize() - 1);
+                textField.setText("> ");
+            }
+        });
+    }
+    public static void runCmd(Boolean script) {
+        ArrayList<String> script_commands = new ArrayList<>();
+        if (script) {
+            script_commands = read_script(script_name);
+        }
+        ArrayList<String> finalScript_commands = script_commands;
+
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -214,31 +266,13 @@ public class Main{
                 scrollPane.setViewportView(commands);
                 scrollPane.setSize(new Dimension(540, 280));
 
-                textField.addActionListener(new ActionListener() { // обработка нажатия enter
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        listModel.add(listModel.getSize(), textField.getText());
-                        checkCommand(textField.getText(), listModel);
-                        if (textField.getText().equals("> exit")) {
-                            window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
-                        }
-                        commands.ensureIndexIsVisible(listModel.getSize() - 1);
-                        textField.setText("> ");
+                if (script) {
+                    for (String finalScriptCommand : finalScript_commands) {
+                        listModel.add(listModel.getSize(), finalScriptCommand);
+                        checkCommand(finalScriptCommand, listModel);
                     }
-                });
-
-                button.addActionListener(new ActionListener() { // обработка нажатия кнопки
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        listModel.add(listModel.getSize(), textField.getText());
-                        checkCommand(textField.getText(), listModel);
-                        if (textField.getText().equals("> exit")) {
-                            window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
-                        }
-                        commands.ensureIndexIsVisible(listModel.getSize() - 1);
-                        textField.setText("> ");
-                    }
-                });
+                }
+                buttonsListeners(textField, listModel, window, commands, button);
 
                 // добавляем компоненты на окно
                 panel.add(button);
@@ -273,9 +307,12 @@ public class Main{
     }
 
     public static void main(String args[]) {
-        //start_path = args[0];
-        //script_name = args[1];
+        if (args.length == 2 && args[1] != null) {
+            script_name = args[1];
+        }
         unTar("src/test_arh.tar");
-        runCmd();
+        //
+        script_name = "src/test_script.txt";
+        runCmd(!script_name.isEmpty());
     }
 }
