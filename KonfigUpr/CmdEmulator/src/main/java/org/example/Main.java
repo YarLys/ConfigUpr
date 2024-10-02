@@ -17,6 +17,7 @@ import org.apache.commons.compress.utils.IOUtils;
 
 public class Main{
     public static String start_path = "test_arh/";
+    public static String archive_path = "";
     public static String script_name = "";
     public static String current_path = start_path;
     public static ArrayList<String> directories = new ArrayList<>();
@@ -98,7 +99,7 @@ public class Main{
     public static ArrayList<String> read_file(String name, int k) {
         ArrayList<String> out = new ArrayList<>();
         try {
-            File inputTarFile = new File("src/test_arh.tar");
+            File inputTarFile = new File(archive_path);
             try (InputStream fileInputStream = new FileInputStream(inputTarFile);
                  InputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
                  TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(bufferedInputStream))
@@ -158,7 +159,7 @@ public class Main{
         }
         switch (text_start) {
             case "> ls":
-                ArrayList<String> arrayList = unTar("src/test_arh.tar");
+                ArrayList<String> arrayList = unTar(archive_path);
                 for (int i = 0; i < arrayList.size(); i++)
                     listModel.add(listModel.getSize(), arrayList.get(i));
                 break;
@@ -167,7 +168,7 @@ public class Main{
                 if (text.length() <= 5) // > cd
                     break;
 
-                unTar("src/test_arh.tar"); // чтобы в directories были актуальные папки
+                unTar(archive_path); // чтобы в directories были актуальные папки
                 if (text.length() == 6 && text.charAt(text.length()-1) == '/') { // cd /
                     current_path = start_path;
                     break;
@@ -196,7 +197,7 @@ public class Main{
                 else listModel.add(listModel.getSize(), "No such directory.");
                 break;
             case "> tail":
-                unTar("src/test_arh.tar"); // чтобы в files были актуальные файлы
+                unTar(archive_path); // чтобы в files были актуальные файлы
                 tail_command(text, listModel);
                 break;
             case "> pwd":
@@ -307,12 +308,22 @@ public class Main{
     }
 
     public static void main(String args[]) {
-        if (args.length == 2 && args[1] != null) {
-            script_name = args[1];
+        if (args.length > 0) {
+            archive_path = args[0]; // вырежем необходимое
+            start_path = archive_path.substring(archive_path.lastIndexOf('/') + 1);
+            start_path = start_path.substring(0, start_path.length()-4) + "/";
+            current_path = start_path;
+            if (args.length == 2 && args[1] != null) script_name = args[1];
         }
-        unTar("src/test_arh.tar");
-        //
-        script_name = "src/test_script.txt";
+        /*archive_path = "D:/Projects/Java/KonfigUpr/CmdEmulator/src/test_arh.tar";
+        start_path = archive_path.substring(archive_path.lastIndexOf('/') + 1);
+        start_path = start_path.substring(0, start_path.length()-4) + "/";
+        current_path = start_path;*/
+
+        unTar(archive_path);
         runCmd(!script_name.isEmpty());
+
+        //unTar("src/test_arh.tar"); // archive_path
+        //script_name = "src/test_script.txt";
     }
 }

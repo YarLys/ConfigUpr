@@ -1,0 +1,1 @@
+D:\Projects\Java\KonfigUpr\CmdEmulator\out\artifacts\CmdEmulator_jar>java -jar CmdEmulator.jar D:/Projects/Java/KonfigUpr/CmdEmulator/src/test_arh.tar D:/Projects/Java/KonfigUpr/CmdEmulator/src/test_script.txt
