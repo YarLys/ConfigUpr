@@ -16,8 +16,8 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 public class Main{
-    public static String start_path = "test_arh/";
-    public static String archive_path = "";
+    public static String start_path = "";
+    public static String archive_path = "test_arh/";
     public static String script_name = "";
     public static String current_path = start_path;
     public static ArrayList<String> directories = new ArrayList<>();
@@ -307,23 +307,27 @@ public class Main{
         });
     }
 
+    public static String replace_slashes(String str) {
+        String out = str;
+        for (int i = 0; i < out.length(); i++) {
+            if (out.charAt(i) == '\\') {
+                out = out.substring(0, i) + "/" + out.substring(i+1);
+            }
+        }
+        return out;
+    }
+
     public static void main(String args[]) {
         if (args.length > 0) {
             archive_path = args[0]; // вырежем необходимое
+            archive_path = replace_slashes(archive_path);
             start_path = archive_path.substring(archive_path.lastIndexOf('/') + 1);
-            start_path = start_path.substring(0, start_path.length()-4) + "/";
+            start_path = start_path.substring(0, start_path.length() - 4) + "/";
             current_path = start_path;
             if (args.length == 2 && args[1] != null) script_name = args[1];
+
+            unTar(archive_path);
+            runCmd(!script_name.isEmpty());
         }
-        /*archive_path = "D:/Projects/Java/KonfigUpr/CmdEmulator/src/test_arh.tar";
-        start_path = archive_path.substring(archive_path.lastIndexOf('/') + 1);
-        start_path = start_path.substring(0, start_path.length()-4) + "/";
-        current_path = start_path;*/
-
-        unTar(archive_path);
-        runCmd(!script_name.isEmpty());
-
-        //unTar("src/test_arh.tar"); // archive_path
-        //script_name = "src/test_script.txt";
     }
 }
