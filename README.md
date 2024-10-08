@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/39d8fb54-db53-472a-b745-638c46846c77)# Домашнее задание по конфигурационному управлению
+# Домашнее задание по конфигурационному управлению
 ## Лысаков Ярослав, ИКБО-50-23
 ## Этапы запуска проекта репозитория
 1. Загрузить репозиторий на компьютер
@@ -26,6 +26,7 @@
 ## Тестирование
   ![image](https://github.com/user-attachments/assets/b2d5e916-6f36-411a-94cf-dec3104823d3)
   ![image](https://github.com/user-attachments/assets/effd4a5c-5d1b-495e-9ac0-e475e07e6a9e)
+  ![image](https://github.com/user-attachments/assets/39d8fb54-db53-472a-b745-638c46846c77)
   ![image](https://github.com/user-attachments/assets/ea2425e7-0ae5-4776-a27f-8c72b1f0ed2f)
   ![image](https://github.com/user-attachments/assets/9c6452c3-f4a2-4e98-bac5-281a064bff10)
   ![image](https://github.com/user-attachments/assets/81125891-662e-4ee7-bab1-fcbd60c83c30)
